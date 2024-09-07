@@ -11,6 +11,7 @@ def historical_data(
     from_date: Union[str, None] = None,
     to_date: Union[str, None] = None,
     interval: Literal[1, 5, 15, 30, 60, 300, "D", "W", "M"] = "D",
+    splash_server_url: str = None,
 ) -> Dict[str, Any]:
     """Get historical data from Investing.com.
 
@@ -45,7 +46,9 @@ def historical_data(
         Config.time_format if interval not in ["D", "W", "M"] else Config.date_format
     )
 
-    info = investing_info(investing_id=investing_id)
+    info = investing_info(
+        investing_id=investing_id, splash_server_url=splash_server_url
+    )
 
     has_volume = not info["has_no_volume"]
     days_shift = 1 if info["type"] in ["Yield"] else 0
@@ -57,7 +60,9 @@ def historical_data(
             "to": int(to_datetime.timestamp()),
             "resolution": interval,
         }
-        data = request_to_investing(endpoint="history", params=params)
+        data = request_to_investing(
+            endpoint="history", params=params, splash_server_url=splash_server_url
+        )
         result["date"] += [
             (datetime.fromtimestamp(t) - timedelta(days=days_shift)).strftime(
                 datetime_format

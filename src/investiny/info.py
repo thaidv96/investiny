@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Union
 from investiny.utils import request_to_investing
 
 
-def info(asset: Union[str, List[str]]) -> Dict[str, Any]:
+def info(asset: Union[str, List[str]], splash_server_url: str = None) -> Dict[str, Any]:
     """Get assets' public information available at Investing.com
 
     Args:
@@ -19,6 +19,7 @@ def info(asset: Union[str, List[str]]) -> Dict[str, Any]:
     results = request_to_investing(
         endpoint="quotes",
         params={"symbols": asset if isinstance(asset, str) else ",".join(asset)},
+        splash_server_url=splash_server_url,
     )
     actual_results = results["d"]  # type: ignore
     if len(actual_results) < 2:
@@ -29,7 +30,7 @@ def info(asset: Union[str, List[str]]) -> Dict[str, Any]:
     return r
 
 
-def investing_info(investing_id: int) -> Dict[str, Any]:
+def investing_info(investing_id: int, splash_server_url: str = None) -> Dict[str, Any]:
     """Get asset's information used internally by Investing.com.
 
     Args:
@@ -41,4 +42,5 @@ def investing_info(investing_id: int) -> Dict[str, Any]:
     return request_to_investing(  # type: ignore
         endpoint="symbols",
         params={"symbol": investing_id},
+        splash_server_url=splash_server_url,
     )

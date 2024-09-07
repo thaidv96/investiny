@@ -2,8 +2,10 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Literal, Tuple, Union
 from uuid import uuid4
-
+from urllib.parse import urlencode
+import json
 import httpx
+import requests
 
 from investiny.config import Config
 
@@ -11,7 +13,9 @@ logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
 
 
 def request_to_investing(
-    endpoint: Literal["history", "search", "quotes", "symbols"], params: Dict[str, Any]
+    endpoint: Literal["history", "search", "quotes", "symbols"],
+    params: Dict[str, Any],
+    splash_server_url: str = None,
 ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
     """Sends an HTTP GET request to Investing.com API with the introduced params.
 
@@ -31,12 +35,26 @@ def request_to_investing(
         "Referer": "https://tvc-invdn-com.investing.com/",
         "Content-Type": "application/json",
     }
-    r = httpx.get(url, params=params, headers=headers)
-    if r.status_code != 200:
-        raise ConnectionError(
-            f"Request to Investing.com API failed with error code: {r.status_code}."
-        )
-    d = r.json()
+    if splash_server_url:
+        # Add params to the URL
+        url = f"{url}?{urlencode(params)}"
+
+        target = f"{splash_server_url}/render.html"
+        params = {
+            "url": url,
+            "wait": 1,
+            "timeout": 10,
+            "html": 1,
+        }
+        r = requests.get(target, params=params, headers=headers)
+        d = json.loads(r.text.split("<body>")[1].split("</body>")[0])
+    else:
+        r = httpx.get(url, params=params, headers=headers)
+        if r.status_code != 200:
+            raise ConnectionError(
+                f"Request to Investing.com API failed with error code: {r.status_code}."
+            )
+        d = r.json()
 
     if endpoint in ["history", "quotes"] and d["s"] != "ok":
         raise ConnectionError(

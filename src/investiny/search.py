@@ -21,6 +21,7 @@ def search_assets(
         None,
     ] = None,
     exchange: Union[str, None] = None,
+    splash_server_url: str = None,
 ) -> List[Dict[str, Any]]:
     """Search any available asset at Investing.com.
 
@@ -39,4 +40,6 @@ def search_assets(
         "type": type if type else "",
         "exchange": exchange if exchange else "",
     }
-    return request_to_investing(endpoint="search", params=params)  # type: ignore
+    return request_to_investing(
+        endpoint="search", params=params, splash_server_url=splash_server_url
+    )  # type: ignore
